@@ -1,0 +1,22 @@
+.control-dots {
+    bottom: -15px !important;
+  }
+  
+  .slick-next {
+    right: 0px !important;
+    z-index: 200;
+  }
+  
+  .slick-prev {
+    left: 0px;
+    z-index: 200;
+  }
+  
+  .slick-prev:before, .slick-next:before {
+    color: black;
+  }
+
+  .react-slideshow-container .default-nav {
+    width: 20px !important;
+  }
+  

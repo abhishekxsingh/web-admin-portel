@@ -1,0 +1,30 @@
+#.gitignore
+.git
+
+# Log files and pid files
+logs
+*.pid
+*.log
+*.logs
+
+.env
+.DS_Store
+
+# Terraform State
+*.tfstate*
+
+# Visual Studio Code
+.vscode
+.vs
+
+#Files not required in Build
+.nyc_output
+src
+style
+test
+logs
+index.html
+webpack.config.js
+.babelrc
+.editorconfig
+.eslintrc.js

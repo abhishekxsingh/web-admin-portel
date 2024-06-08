@@ -1,0 +1,81 @@
+#  Bitbucket Pipeline for template engine
+image: node:16.16.0
+
+pipelines:
+  branches:
+    task-*:
+      - step:
+          name: 1. Scanning Git Secrets
+          script:
+            - echo "Installing Git Secrets"
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/clone-git-secrets.sh
+            - echo "Scan Git Secrets"
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/git-secrets.sh
+
+    '{feature-*,bugfix-*,feature/*,bugfix/*}':
+      - step:
+          name: 1.Running Initial Tests
+          script:
+            - echo "Installing Git Secrets"
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/clone-git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+            - echo "NPM Installing Packages"
+            - npm install -g pnpm@latest
+            - pnpm i
+            - echo "Building the solution"
+            - npm run build
+            - echo "Scan Git Secrets"
+            - cd ${BITBUCKET_CLONE_DIR}
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+
+    '{dev,qa,hotfix-*}':
+      - step:
+          name: 1.Running Initial Tests
+          script:
+            - echo "Installing Git Secrets"
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/clone-git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+            - echo "NPM Installing Packages"
+            - npm install -g pnpm@latest
+            - pnpm i
+            - echo "Building the solution"
+            - npm run build
+            - echo "Scan Git Secrets"
+            - cd ${BITBUCKET_CLONE_DIR}
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+            - echo "Removing unnecessary modules for production deployment"
+            - pnpm prune --prod          
+            - cp ${BITBUCKET_CLONE_DIR}/Dockerfile ${BITBUCKET_CLONE_DIR}/server
+            - cp ${BITBUCKET_CLONE_DIR}/.dockerignore ${BITBUCKET_CLONE_DIR}/server
+          artifacts:
+            - server/**
+      - step:
+          name: 2. Create AWS ECR Registry and Push Artifacts
+          image: python:2.7.12
+          services:
+            - docker
+          script:
+            - bash ${BITBUCKET_CLONE_DIR}/ops/ci/push-docker-image-ecr.sh ${BITBUCKET_CLONE_DIR}/server
+      - step:
+          name: 3. Creating tag to commit
+          script:
+            - bash ${BITBUCKET_CLONE_DIR}/ops/ci/create-tag.sh
+    '{test,sit,uat,demo,pre-prod,master}':
+      - step:
+          name: 1.Running Initial Tests
+          script:
+            - echo "Installing Git Secrets"
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/clone-git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+            - echo "NPM Installing Packages"
+            - npm install -g pnpm@latest
+            - pnpm i
+            - echo "Building the solution"
+            - npm run build
+            - echo "Scan Git Secrets"
+            - cd ${BITBUCKET_CLONE_DIR}
+            - source ${BITBUCKET_CLONE_DIR}/ops/ci/git-secrets.sh
+            - cd ${BITBUCKET_CLONE_DIR}/server
+            - cp -a dist/. public/
